@@ -1,19 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.*
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    val kotlinVersion: String by rootProject
-
-    dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-    }
-}
-
 plugins {
     id("com.github.ben-manes.versions")
+    kotlin("multiplatform") apply false
 }
 
 allprojects {

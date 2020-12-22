@@ -6,7 +6,11 @@ plugins {
 kotlin {
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "1.6"
+            kotlinOptions {
+                jvmTarget = "1.6"
+//                TODO still doesn't work
+//                useIR = true
+            }
         }
     }
     js {

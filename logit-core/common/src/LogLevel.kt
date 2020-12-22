@@ -20,12 +20,12 @@ class LogLevel(name: String, val value: Int) : Comparable<LogLevel> {
     }
 
     companion object {
-        val ALL: LogLevel = LogLevel("ALL", Int.MIN_VALUE)
+        val MIN: LogLevel = LogLevel("MIN", Int.MIN_VALUE)
         val TRACE: LogLevel = LogLevel("TRACE", 100)
         val DEBUG: LogLevel = LogLevel("DEBUG", 300)
         val INFO: LogLevel = LogLevel("INFO", 500)
         val WARN: LogLevel = LogLevel("WARN", 700)
         val ERROR: LogLevel = LogLevel("ERROR", 900)
-        val OFF: LogLevel = LogLevel("OFF", Int.MAX_VALUE)
+        val MAX: LogLevel = LogLevel("MAX>", Int.MAX_VALUE)
     }
 }

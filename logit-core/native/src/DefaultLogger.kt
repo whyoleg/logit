@@ -1,3 +1,3 @@
 package logit
 
-actual val DefaultLogger: LoggerFactory get() = PrintLogger
+actual val DefaultLogger: LoggerFactory get() = PrintBridge.default.logger

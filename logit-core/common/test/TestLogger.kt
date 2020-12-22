@@ -6,7 +6,7 @@ class TestLogger : LoggerFactory {
         TestLogPrinter(tag).also { printers[tag] = it }
     }
 
-    override fun get(tag: String): Logger = Logger(tag, LogContext.Empty, LogFilterFactory.ALL, printer)
+    override fun get(tag: String): Logger = Logger(tag, printer)
 }
 
 class TestLogPrinter(val tag: String) : LogPrinter {

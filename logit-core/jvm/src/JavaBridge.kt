@@ -3,28 +3,29 @@ package logit
 import java.util.logging.*
 import java.util.logging.Logger as JLogger
 
-object JavaLogger : LoggerFactory {
-    private val filter = LogFilterFactory { tag ->
+actual val DefaultLogger: LoggerFactory get() = JavaBridge.default.logger
+
+object JavaBridge : LogBridge<LogRecord>(
+    LogFormatPrinterFactory { tag ->
         val jLogger = JLogger.getLogger(tag)
-        LogFilter { level, _ ->
+        LogFormatPrinter<LogRecord> { level, entry ->
+            entry.level = level.jLevel
+            jLogger.log(entry)
+        }.filter { level, _ ->
             jLogger.isLoggable(level.jLevel)
         }
-    }
-    private val printer = LogPrinterFactory { tag ->
-        val jLogger = JLogger.getLogger(tag)
-        LogPrinter { level, context ->
-            val record = LogRecord(level.jLevel, context.message.toString()).apply {
+    },
+    LogFormatFactory { tag ->
+        LogFormat { _, context ->
+            LogRecord(Level.ALL, context.message.toString()).apply {
                 loggerName = tag
                 sourceClassName = context.callerClass
                 sourceMethodName = context.callerMethod
                 thrown = context.error
             }
-            jLogger.log(record)
         }
     }
-
-    override fun get(tag: String): Logger = Logger(tag, LogContext.Empty, filter, printer)
-}
+)
 
 private val LogLevel.jLevel: Level
     get() = when (this) {

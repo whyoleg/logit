@@ -2,31 +2,43 @@ package logit
 
 data class Logger(
     internal val tag: String,
-    internal val context: LogContext,
-    internal val filterFactory: LogFilterFactory,
-    internal val printerFactory: LogPrinterFactory
+    internal val printerFactory: LogPrinterFactory,
+    internal val filterFactory: LogFilterFactory = NoLogFilter,
+    internal val interceptorFactory: LogInterceptorFactory = NoLogInterceptor,
+    internal val context: LogContext = LogContext.Empty
 ) {
-    private val filter: LogFilter by lazy { filterFactory.getFilter(tag) }
     private val printer: LogPrinter by lazy { printerFactory.getPrinter(tag) }
+    private val filter: LogFilter by lazy { filterFactory.getFilter(tag) }
+    private val interceptor: LogInterceptor by lazy { interceptorFactory.getInterceptor(tag) }
 
     @PublishedApi
-    internal fun filter(logContext: LogContext, level: LogLevel, throwable: Throwable?): LogContext? {
-        val filterContext = this.context + logContext + (throwable?.let { LogTag.Error(throwable) } ?: LogContext.Empty)
-        if (!filter.isLoggable(level, filterContext)) return null
-        return filterContext
+    internal fun logContext(logContext: LogContext, throwable: Throwable?): LogContext {
+        val newContext = this.context + logContext
+        return if (throwable != null) newContext + LogContextTag.Error(throwable) else newContext
+    }
+
+    @PublishedApi
+    internal fun filter(logContext: LogContext, level: LogLevel): LogContext? {
+        val filterContext = interceptor.interceptFilter(level, logContext)
+        if (filter.isLoggable(level, filterContext) && printer.filter.isLoggable(level, filterContext)) return filterContext
+        return null
     }
 
     @PublishedApi
     internal fun print(filterContext: LogContext, level: LogLevel, message: Result<Any?>) {
-        val printContext = filterContext + message.fold(
-            onSuccess = { it?.let { LogTag.Message(it) } ?: LogContext.Empty },
-            onFailure = { LogTag.ErrorDuringLogCreation(it) }
+        val messageContext = message.fold(
+            onSuccess = { msg -> if (msg != null) LogContextTag.Message(msg) else LogContext.Empty },
+            onFailure = { LogContextTag.ErrorDuringLogCreation(it) }
         )
+        val printContext = interceptor.interceptPrinter(level, filterContext + messageContext)
         printer.print(level, printContext)
     }
 
     inline fun log(level: LogLevel, throwable: Throwable? = null, context: LogContext = LogContext.Empty, message: () -> Any? = { null }) {
-        print(filter(context, level, throwable) ?: return, level, runCatching(message))
+        val logContext = logContext(context, throwable)
+        val filterContext = filter(logContext, level) ?: return
+        val msg = runCatching(message)
+        print(filterContext, level, msg)
     }
 
 }

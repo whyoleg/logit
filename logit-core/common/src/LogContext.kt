@@ -1,7 +1,7 @@
 package logit
 
 sealed class LogContext {
-    abstract operator fun <T : Any> get(key: LogTag<T>): T?
+    abstract operator fun <T : Any> get(key: LogContextTag<T>): T?
 
     operator fun plus(other: LogContext): LogContext {
         if (this !is NonEmpty) return other
@@ -10,14 +10,14 @@ sealed class LogContext {
     }
 
     object Empty : LogContext() {
-        override fun <T : Any> get(key: LogTag<T>): T? = null
+        override fun <T : Any> get(key: LogContextTag<T>): T? = null
 
         override fun toString(): String = "LogContext[EMPTY]"
     }
 
-    internal class NonEmpty(val map: Map<LogTag<*>, Any>) : LogContext() {
+    internal class NonEmpty(val map: Map<LogContextTag<*>, Any>) : LogContext() {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : Any> get(key: LogTag<T>): T? = map[key] as T?
+        override fun <T : Any> get(key: LogContextTag<T>): T? = map[key] as T?
 
         override fun toString(): String = "LogContext[$map]"
     }
